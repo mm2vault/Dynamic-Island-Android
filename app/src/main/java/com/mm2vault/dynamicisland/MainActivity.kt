@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Purple, background = Ink, surface = Color(0xFF17131F))) {
-                val overlayGranted = remember { mutableStateOf(Settings.canDrawOverlays(this)) }
+                val overlayGranted = remember { mutableStateOf(Settings.canDrawOverlays(this@MainActivity)) }
                 val listenerEnabled = remember { mutableStateOf(isNotificationAccessEnabled()) }
                 Surface(Modifier.fillMaxSize(), color = Ink) {
                     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -50,14 +50,14 @@ class MainActivity : ComponentActivity() {
                         }
                         Text("Bildirim erişimi isteğe bağlıdır. Hassas içerikler Android tarafından gizlenebilir.", color = Color(0xFFAAA4B5), fontSize = 12.sp)
                         Button(onClick = {
-                            if (!Settings.canDrawOverlays(this)) {
+                            if (!Settings.canDrawOverlays(this@MainActivity)) {
                                 startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
                             } else {
-                                val intent = Intent(this, IslandService::class.java)
+                                val intent = Intent(this@MainActivity, IslandService::class.java)
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent) else startService(intent)
                             }
                         }, modifier = Modifier.fillMaxWidth()) { Text("Island'ı başlat") }
-                        OutlinedButton(onClick = { stopService(Intent(this, IslandService::class.java)) }, modifier = Modifier.fillMaxWidth()) { Text("Island'ı durdur") }
+                        OutlinedButton(onClick = { stopService(Intent(this@MainActivity, IslandService::class.java)) }, modifier = Modifier.fillMaxWidth()) { Text("Island'ı durdur") }
                         Text("Android 8+ • İnternet yok • Ücretsiz ve açık kaynak", color = Color(0xFF8E8799), fontSize = 11.sp)
                     }
                 }
