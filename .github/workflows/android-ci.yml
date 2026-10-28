@@ -27,9 +27,15 @@ jobs:
           gradle-version: '8.9'
       - name: Build debug APK
         run: gradle assembleDebug
-      - name: Upload APK
+      - name: Verify APK and create checksum
+        run: |
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          sha256sum app/build/outputs/apk/debug/app-debug.apk | tee app/build/outputs/apk/debug/SHA256SUMS.txt
+      - name: Upload APK and checksum
         uses: actions/upload-artifact@v4
         with:
           name: dynamic-island-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/SHA256SUMS.txt
           if-no-files-found: error
