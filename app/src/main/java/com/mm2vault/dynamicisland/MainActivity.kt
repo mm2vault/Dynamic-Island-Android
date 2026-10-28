@@ -27,7 +27,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Purple, background = Ink, surface = Color(0xFF17131F))) {
                 val overlayGranted = remember { mutableStateOf(Settings.canDrawOverlays(this@MainActivity)) }
-                val listenerEnabled = remember { mutableStateOf(isNotificationAccessEnabled()) }
                 Surface(Modifier.fillMaxSize(), color = Ink) {
                     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                         Text("DYNAMIC ISLAND", color = Purple, fontSize = 13.sp, letterSpacing = 3.sp)
@@ -45,10 +44,7 @@ class MainActivity : ComponentActivity() {
                         PermissionRow("Diğer uygulamaların üzerinde göster", overlayGranted.value, "İzin ver") {
                             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
                         }
-                        PermissionRow("Bildirim erişimi", listenerEnabled.value, "Ayarları aç") {
-                            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                        }
-                        Text("Bildirim erişimi isteğe bağlıdır. Hassas içerikler Android tarafından gizlenebilir.", color = Color(0xFFAAA4B5), fontSize = 12.sp)
+                        Text("Bu ilk sürüm yalnızca kapsül ve pil/şarj bilgisini gösterir. Bildirim içeriğine erişmez ve internet izni istemez.", color = Color(0xFFAAA4B5), fontSize = 13.sp)
                         Button(onClick = {
                             if (!Settings.canDrawOverlays(this@MainActivity)) {
                                 startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
@@ -58,16 +54,11 @@ class MainActivity : ComponentActivity() {
                             }
                         }, modifier = Modifier.fillMaxWidth()) { Text("Island'ı başlat") }
                         OutlinedButton(onClick = { stopService(Intent(this@MainActivity, IslandService::class.java)) }, modifier = Modifier.fillMaxWidth()) { Text("Island'ı durdur") }
-                        Text("Android 8+ • İnternet yok • Ücretsiz ve açık kaynak", color = Color(0xFF8E8799), fontSize = 11.sp)
+                        Text("Android 8+ • Ücretsiz • Açık kaynak", color = Color(0xFF8E8799), fontSize = 11.sp)
                     }
                 }
             }
         }
-    }
-
-    private fun isNotificationAccessEnabled(): Boolean {
-        val enabled = Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: return false
-        return enabled.contains(packageName)
     }
 }
 
