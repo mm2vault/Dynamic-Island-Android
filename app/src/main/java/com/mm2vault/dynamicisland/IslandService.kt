@@ -59,8 +59,15 @@ class IslandService : Service() {
             .setOngoing(true).build()
         else Notification.Builder(this).setContentTitle("Dynamic Island is active").setSmallIcon(android.R.drawable.ic_dialog_info).build()
         startForeground(42, notification)
-        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        registerReceiver(notificationReceiver, IntentFilter(IslandNotificationListener.ACTION_NOTIFICATION))
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(notificationReceiver, IntentFilter(IslandNotificationListener.ACTION_NOTIFICATION), Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            @Suppress("DEPRECATION")
+            registerReceiver(notificationReceiver, IntentFilter(IslandNotificationListener.ACTION_NOTIFICATION))
+        }
         showIsland()
     }
 
