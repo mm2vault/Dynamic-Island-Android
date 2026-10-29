@@ -44,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.mm2vault.dynamicisland.BuildConfig
 import com.mm2vault.dynamicisland.R
 
 @Composable
@@ -76,7 +77,7 @@ fun HomeScreen(
             if (startError) Text(stringResource(R.string.start_failed), color = Palette.Warning, style = MaterialTheme.typography.bodySmall)
             Controls(running, overlayGranted, onStart, onStop, onOpenPermission)
             Reliability(onOpenBattery, onOpenAppInfo)
-            Text(stringResource(R.string.privacy_note), style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth())
+            Text(stringResource(if (BuildConfig.FULL) R.string.privacy_note else R.string.privacy_note_lite), style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth())
         }
     }
 }

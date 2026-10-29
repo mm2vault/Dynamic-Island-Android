@@ -39,14 +39,15 @@ object UpdateRules {
     fun isNewer(remote: Int, installed: Long): Boolean = remote.toLong() > installed
 
     /** SHA256SUMS lines look like "<hex>  <path>". */
-    fun expectedHash(sums: String): String? =
-        sums.lineSequence().map { it.trim() }.firstOrNull { it.isNotEmpty() }
+    fun expectedHash(sums: String, fileName: String): String? =
+        sums.lineSequence().map { it.trim() }
+            .firstOrNull { it.isNotEmpty() && it.split(Regex("\\s+")).last().substringAfterLast('/') == fileName }
             ?.substringBefore(' ')?.lowercase()?.takeIf { it.length == 64 && it.all { c -> c in '0'..'9' || c in 'a'..'f' } }
 }
 
 object Updater {
     private const val API = "https://api.github.com/repos/mm2vault/Dynamic-Island-Android/releases/latest"
-    private const val APK_NAME = "Dynamic-Island.apk"
+    private const val APK_NAME = "Dynamic-Island-Full.apk"
     private const val SUMS_NAME = "SHA256SUMS.txt"
 
     fun installedBuild(context: Context): Long =
@@ -101,7 +102,7 @@ object Updater {
                 }
             }
             val actual = digest.digest().joinToString("") { "%02x".format(it) }
-            val expected = r.sumsUrl?.let { UpdateRules.expectedHash(httpGet(it)) }
+            val expected = r.sumsUrl?.let { UpdateRules.expectedHash(httpGet(it), APK_NAME) }
             if (expected == null || expected != actual) {
                 out.delete()
                 return@withContext UpdateState.Failed(Reason.CHECKSUM)

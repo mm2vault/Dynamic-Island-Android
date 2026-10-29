@@ -28,6 +28,7 @@
     <string name="stop_island">Island’ı durdur</string>
     <string name="start_failed">Kapsül başlatılamadı. İzni kontrol edip tekrar dene.</string>
     <string name="privacy_note">İnternet yalnızca “Güncellemeyi kontrol et” düğmesine bastığında GitHub’a bağlanmak için kullanılır. Reklam ve izleyici yok, veriler cihazda kalır.</string>
+    <string name="privacy_note_lite">İnternet erişimi yok, bildirimler okunmaz, APK kurma izni yok. Veriler cihazda kalır.</string>
     <string name="settings_title">Kapsül ayarları</string>
     <string name="setting_width">Genişlik</string>
     <string name="setting_height">Yükseklik</string>

@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.mm2vault.dynamicisland.BuildConfig
 import com.mm2vault.dynamicisland.R
 import com.mm2vault.dynamicisland.data.IslandSettings
 
@@ -109,6 +110,7 @@ fun SettingsScreen(
                 SwitchRow(R.string.setting_autostart, R.string.setting_autostart_desc, settings.autostart) { onChange(settings.copy(autostart = it)) }
             }
             Text(stringResource(R.string.settings_apply_hint), style = MaterialTheme.typography.bodySmall)
+            if (BuildConfig.FULL) {
             Column(
                 Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(Palette.Surface)
                     .border(1.dp, Palette.Hairline, MaterialTheme.shapes.medium).padding(16.dp),
@@ -131,7 +133,8 @@ fun SettingsScreen(
                 }
                 Text(stringResource(R.string.live_privacy), style = MaterialTheme.typography.bodySmall)
             }
-            update()
+            }
+            if (BuildConfig.FULL) update()
             OutlinedButton(
                 onClick = onReset, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(26.dp)
             ) { Text(stringResource(R.string.settings_reset), color = Palette.Text) }
