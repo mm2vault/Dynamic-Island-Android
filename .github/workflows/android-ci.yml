@@ -25,6 +25,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Unit tests
+        run: |
+          set -o pipefail
+          gradle testDebugUnitTest --console=plain 2>&1 | tee build.log || {
+            grep -E "^e: |error:|FAILED|What went wrong|Unresolved|Caused by" -A2 build.log | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          }
       - name: Build debug APK
         run: gradle assembleDebug
       - name: Verify APK and create checksum

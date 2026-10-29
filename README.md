@@ -2,23 +2,23 @@
 
 An open-source Android overlay inspired by the Dynamic Island pill, built with Kotlin and Jetpack Compose.
 
-## Features in the current starter
-- Floating black capsule with a purple neon accent.
-- Tap-to-expand/collapse animation.
-- Live battery percentage and charging status.
-- Explicit Android settings flow for overlay permission.
+## Features
+- Canvas-drawn floating capsule with purple rim light and a soft glow, centred on the top display cutout when Android reports one.
+- Tap to expand: battery ring, percentage and charging / full / discharging status, all from real Android battery broadcasts.
+- Premium dark-purple home screen with a clearly labelled sample preview, permission status and start / stop control.
+- Settings (DataStore): capsule width, height, vertical offset, animation intensity and glow. Changes apply to the running capsule immediately; reset restores defaults.
+- Turkish UI, all text in string resources.
 - No internet, SMS, contacts, microphone, location, or notification-listener permission.
-- GitHub Actions build for a debug APK.
 
 ## Compatibility
 Targets Android 8.0 (API 26) and newer. Xiaomi, Redmi, POCO and other manufacturers may apply background restrictions, so behavior can vary by device. The user must explicitly grant Display over other apps. Battery optimization and autostart settings may also affect persistence on some devices.
 
 ## Build
-GitHub Actions builds the debug APK on pushes to main and can be started from Actions → Android CI → Run workflow. Download the artifact named dynamic-island-debug-apk, extract the ZIP, and install app-debug.apk.
+GitHub Actions runs the unit tests and builds the debug APK on pushes to main. Each successful build is published as a GitHub Release with a direct `Dynamic-Island.apk` asset and a separate `SHA256SUMS.txt`; no ZIP extraction is needed.
 
 For local builds with JDK 17 and Gradle 8.9:
 ~~~bash
-gradle assembleDebug
+gradle testDebugUnitTest assembleDebug
 ~~~
 
 ## Permissions and privacy
