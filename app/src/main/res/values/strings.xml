@@ -46,4 +46,17 @@
     <string name="overlay_unknown">Pil bilgisi yok</string>
     <string name="overlay_cd">Dynamic Island kapsülü. Genişletmek için dokun.</string>
     <string name="logo_cd">Dynamic Island logosu</string>
+    <string name="setting_haptics">Dokunma titreşimi</string>
+    <string name="setting_haptics_desc">Kapsül açılıp kapanırken hafif titreşim</string>
+    <string name="setting_autostart">Cihaz açılınca başlat</string>
+    <string name="setting_autostart_desc">Telefon yeniden başladığında kapsülü kendiliğinden açar</string>
+    <string name="plug_ac">Priz</string>
+    <string name="plug_usb">USB</string>
+    <string name="plug_wireless">Kablosuz</string>
+    <string name="plug_unknown">Şarj kaynağı</string>
+    <string name="reliability_title">Kapsül kapanıyorsa</string>
+    <string name="reliability_desc">Xiaomi, Redmi ve POCO gibi cihazlar arka planı sınırlayabilir. Pil kısıtlamasını kaldırıp otomatik başlatmaya izin ver.</string>
+    <string name="reliability_battery">Pil optimizasyonu</string>
+    <string name="reliability_app_info">Uygulama bilgisi</string>
+    <string name="temp_format">%1$s °C</string>
 </resources>

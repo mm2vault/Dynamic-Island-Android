@@ -95,9 +95,20 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         onOpenSettings = { showSettings = true },
+                        onOpenBattery = {
+                            try { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+                            catch (e: Exception) { openAppInfo() }
+                        },
+                        onOpenAppInfo = { openAppInfo() },
                     )
                 }
             }
         }
+    }
+
+    private fun openAppInfo() {
+        try {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+        } catch (_: Exception) { }
     }
 }
