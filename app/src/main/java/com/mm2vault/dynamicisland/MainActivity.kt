@@ -31,6 +31,9 @@ import com.mm2vault.dynamicisland.data.SettingsRepository
 import com.mm2vault.dynamicisland.ui.HomeScreen
 import com.mm2vault.dynamicisland.ui.IslandTheme
 import com.mm2vault.dynamicisland.ui.SettingsScreen
+import com.mm2vault.dynamicisland.ui.UpdateCard
+import com.mm2vault.dynamicisland.update.UpdateState
+import com.mm2vault.dynamicisland.update.Updater
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -43,6 +46,7 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
                 var overlayGranted by remember { mutableStateOf(Settings.canDrawOverlays(this@MainActivity)) }
                 var listenerGranted by remember { mutableStateOf(hasListenerAccess()) }
+                var updateState by remember { mutableStateOf<UpdateState>(UpdateState.Idle) }
                 var startError by remember { mutableStateOf(false) }
                 var showSettings by rememberSaveable { mutableStateOf(false) }
                 val running by IslandService.running.collectAsState()
@@ -82,6 +86,33 @@ class MainActivity : ComponentActivity() {
                         onBack = { showSettings = false },
                         listenerGranted = listenerGranted,
                         onOpenAccess = { openListenerSettings() },
+                        update = {
+                            val info = packageManager.getPackageInfo(packageName, 0)
+                            UpdateCard(
+                                state = updateState,
+                                versionName = info.versionName ?: "",
+                                build = Updater.installedBuild(this@MainActivity),
+                                needsInstallPermission = !packageManager.canRequestPackageInstalls(),
+                                onCheck = {
+                                    updateState = UpdateState.Checking
+                                    scope.launch { updateState = Updater.check(this@MainActivity) }
+                                },
+                                onDownload = {
+                                    val r = (updateState as? UpdateState.Available)?.release
+                                    if (r != null) {
+                                        updateState = UpdateState.Downloading(0)
+                                        scope.launch {
+                                            updateState = Updater.download(this@MainActivity, r) { p -> updateState = UpdateState.Downloading(p) }
+                                        }
+                                    }
+                                },
+                                onInstall = {
+                                    val f = (updateState as? UpdateState.Ready)?.file
+                                    val intent = f?.let { Updater.install(this@MainActivity, it) }
+                                    if (intent != null) try { startActivity(intent) } catch (_: Exception) { }
+                                },
+                            )
+                        },
                     )
                 } else {
                     HomeScreen(

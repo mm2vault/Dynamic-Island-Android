@@ -50,6 +50,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     listenerGranted: Boolean,
     onOpenAccess: () -> Unit,
+    update: @Composable () -> Unit,
 ) {
     // 0 = none, 1 = notifications, 2 = media: which feature is waiting for the consent dialog.
     var consentFor by remember { mutableStateOf(0) }
@@ -130,6 +131,7 @@ fun SettingsScreen(
                 }
                 Text(stringResource(R.string.live_privacy), style = MaterialTheme.typography.bodySmall)
             }
+            update()
             OutlinedButton(
                 onClick = onReset, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(26.dp)
             ) { Text(stringResource(R.string.settings_reset), color = Palette.Text) }
