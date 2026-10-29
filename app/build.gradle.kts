@@ -33,7 +33,23 @@ android {
             signingConfig = signingConfigs.getByName("shared")
         }
     }
-    buildFeatures { compose = true }
+    // lite: only the overlay permission family. full: adds notification access, internet and APK install
+    // (notification preview, music controls, in-app updates). Same app ID and signing key, so full can update lite.
+    flavorDimensions += "tier"
+    productFlavors {
+        create("lite") {
+            dimension = "tier"
+            buildConfigField("boolean", "FULL", "false")
+        }
+        create("full") {
+            dimension = "tier"
+            buildConfigField("boolean", "FULL", "true")
+        }
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

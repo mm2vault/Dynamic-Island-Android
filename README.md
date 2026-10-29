@@ -10,6 +10,12 @@ An open-source Android overlay inspired by the Dynamic Island pill, built with K
 - Turkish UI, all text in string resources.
 - No internet, SMS, contacts, microphone, location, or notification-listener permission.
 
+## Two builds
+- `Dynamic-Island.apk` (lite): floating capsule, battery, settings. No internet, no notification access, no APK-install permission. Recommended; least likely to trigger Play Protect's sideload warning.
+- `Dynamic-Island-Full.apk`: adds opt-in notification preview, music controls and an in-app update check. It requests internet, notification access and APK install, which Play Protect may flag on sideloaded installs.
+
+Both use the same application ID and signing key, so either installs over the other as an update.
+
 ## Compatibility
 Targets Android 8.0 (API 26) and newer. Xiaomi, Redmi, POCO and other manufacturers may apply background restrictions, so behavior can vary by device. The user must explicitly grant Display over other apps. Battery optimization and autostart settings may also affect persistence on some devices.
 

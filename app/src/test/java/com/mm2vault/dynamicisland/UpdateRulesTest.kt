@@ -23,8 +23,11 @@ class UpdateRulesTest {
 
     @Test fun readsChecksumLine() {
         val h = "21d4e1fd6b27c31679d4b248536526d874a0c5a6eef113eb937fe6ae71e36d9f"
-        assertEquals(h, UpdateRules.expectedHash("$h  app/build/outputs/apk/debug/Dynamic-Island.apk\n"))
-        assertNull(UpdateRules.expectedHash("not a hash  file"))
-        assertNull(UpdateRules.expectedHash(""))
+        val other = "a".repeat(64)
+        val sums = "$other  out/Dynamic-Island.apk\n$h  out/Dynamic-Island-Full.apk\n"
+        assertEquals(h, UpdateRules.expectedHash(sums, "Dynamic-Island-Full.apk"))
+        assertEquals(other, UpdateRules.expectedHash(sums, "Dynamic-Island.apk"))
+        assertNull(UpdateRules.expectedHash("not a hash  Dynamic-Island-Full.apk", "Dynamic-Island-Full.apk"))
+        assertNull(UpdateRules.expectedHash("", "Dynamic-Island-Full.apk"))
     }
 }

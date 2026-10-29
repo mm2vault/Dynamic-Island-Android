@@ -28,17 +28,29 @@ jobs:
       - name: Unit tests
         run: |
           set -o pipefail
-          gradle testDebugUnitTest --console=plain 2>&1 | tee build.log || {
+          gradle testLiteDebugUnitTest --console=plain 2>&1 | tee build.log || {
             grep -E "^e: |error:|FAILED|What went wrong|Unresolved|Caused by" -A2 build.log | head -40 | while IFS= read -r l; do echo "::error::$l"; done
             exit 1
           }
-      - name: Build debug APK
-        run: gradle assembleDebug
-      - name: Verify APK and create checksum
+      - name: Build debug APKs (lite and full)
+        run: gradle assembleLiteDebug assembleFullDebug
+      - name: Verify APKs and create checksums
         run: |
-          test -s app/build/outputs/apk/debug/app-debug.apk
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/Dynamic-Island.apk
-          sha256sum app/build/outputs/apk/debug/Dynamic-Island.apk | tee app/build/outputs/apk/debug/SHA256SUMS.txt
+          mkdir -p dist
+          test -s app/build/outputs/apk/lite/debug/app-lite-debug.apk
+          test -s app/build/outputs/apk/full/debug/app-full-debug.apk
+          cp app/build/outputs/apk/lite/debug/app-lite-debug.apk dist/Dynamic-Island.apk
+          cp app/build/outputs/apk/full/debug/app-full-debug.apk dist/Dynamic-Island-Full.apk
+          (cd dist && sha256sum Dynamic-Island.apk Dynamic-Island-Full.apk | tee SHA256SUMS.txt)
+      - name: Check APK permissions
+        run: |
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          for f in Dynamic-Island Dynamic-Island-Full; do
+            echo "== $f"; "$AAPT" dump permissions dist/$f.apk | tee dist/$f.perms.txt
+          done
+          if grep -qE "INTERNET|REQUEST_INSTALL_PACKAGES|BIND_NOTIFICATION_LISTENER" dist/Dynamic-Island.perms.txt; then
+            echo "::error::lite APK contains a full-only permission"; exit 1
+          fi
       - name: Publish direct APK download
         if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
@@ -46,10 +58,12 @@ jobs:
           tag_name: build-${{ github.run_number }}
           name: Dynamic Island build ${{ github.run_number }}
           body: |
-            Automatically built Android debug APK.
-            Download Dynamic-Island.apk directly below. No ZIP extraction is needed.
-            SHA-256 checksum is provided as a separate file.
+            Automatically built Android debug APKs. No ZIP extraction is needed.
+            Dynamic-Island.apk: lite, overlay and battery only (fewest permissions).
+            Dynamic-Island-Full.apk: adds notification preview, music controls and in-app updates (asks for notification access, internet and APK install).
+            SHA-256 checksums are provided as a separate file.
           files: |
-            app/build/outputs/apk/debug/Dynamic-Island.apk
-            app/build/outputs/apk/debug/SHA256SUMS.txt
+            dist/Dynamic-Island.apk
+            dist/Dynamic-Island-Full.apk
+            dist/SHA256SUMS.txt
           fail_on_unmatched_files: true
