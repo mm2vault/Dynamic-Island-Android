@@ -27,7 +27,7 @@
     <string name="start_island">Island’ı başlat</string>
     <string name="stop_island">Island’ı durdur</string>
     <string name="start_failed">Kapsül başlatılamadı. İzni kontrol edip tekrar dene.</string>
-    <string name="privacy_note">İnternet erişimi yok, bildirim içeriği okunmaz, veriler cihazda kalır.</string>
+    <string name="privacy_note">İnternet yalnızca “Güncellemeyi kontrol et” düğmesine bastığında GitHub’a bağlanmak için kullanılır. Reklam ve izleyici yok, veriler cihazda kalır.</string>
     <string name="settings_title">Kapsül ayarları</string>
     <string name="setting_width">Genişlik</string>
     <string name="setting_height">Yükseklik</string>
@@ -77,4 +77,20 @@
     <string name="media_play">Oynat</string>
     <string name="media_pause">Duraklat</string>
     <string name="media_next">Sonraki parça</string>
+    <string name="update_title">Güncelleme</string>
+    <string name="update_version">Kurulu sürüm: %1$s (derleme %2$d)</string>
+    <string name="update_check">Güncellemeyi kontrol et</string>
+    <string name="update_checking">Kontrol ediliyor…</string>
+    <string name="update_uptodate">Güncelsin, yeni sürüm yok.</string>
+    <string name="update_available">Yeni sürüm var: derleme %1$d</string>
+    <string name="update_download">İndir</string>
+    <string name="update_downloading">İndiriliyor… %1$d%%</string>
+    <string name="update_ready">İndirildi ve doğrulandı. Kurulum penceresi açılacak.</string>
+    <string name="update_install">Güncellemeyi kur</string>
+    <string name="update_need_permission">Android bu uygulamanın APK kurmasına izin vermeli. Açılan ekranda izni verip geri dön.</string>
+    <string name="update_err_network">Bağlantı kurulamadı. İnterneti kontrol edip tekrar dene.</string>
+    <string name="update_err_noapk">Son sürümde APK bulunamadı.</string>
+    <string name="update_err_checksum">İndirilen dosya doğrulanamadı, kurulmadı. Tekrar dene.</string>
+    <string name="update_err_storage">Dosya kaydedilemedi. Depolama alanını kontrol et.</string>
+    <string name="update_note">Güncelleme, aynı imza anahtarıyla yapılan sürümlerin üzerine kurulur. Eski imzalı bir sürüm yüklüyse bir kez kaldırıp yeniden kurman gerekir.</string>
 </resources>

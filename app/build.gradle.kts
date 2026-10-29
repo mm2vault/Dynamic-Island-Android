@@ -11,12 +11,26 @@ android {
         applicationId = "com.mm2vault.dynamicisland"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        // CI sets GITHUB_RUN_NUMBER; releases are tagged build-<run number>, which the in-app updater compares.
+        val build = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+        versionCode = build
+        versionName = "0.3.$build"
+    }
+    // One fixed key for every build so a new APK installs as an update over the old one.
+    // The keystore is public in this repository (owner's choice): it is meant for personal use.
+    signingConfigs {
+        create("shared") {
+            storeFile = file("keystore/dynamic-island.jks")
+            storePassword = "dynamicisland"
+            keyAlias = "dynamicisland"
+            keyPassword = "dynamicisland"
+        }
     }
     buildTypes {
+        debug { signingConfig = signingConfigs.getByName("shared") }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("shared")
         }
     }
     buildFeatures { compose = true }
