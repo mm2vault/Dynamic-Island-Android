@@ -17,6 +17,8 @@ import com.mm2vault.dynamicisland.data.BatteryState
 import com.mm2vault.dynamicisland.data.ChargeState
 import com.mm2vault.dynamicisland.data.IslandSettings
 import com.mm2vault.dynamicisland.data.PlugType
+import com.mm2vault.dynamicisland.live.MediaInfo
+import com.mm2vault.dynamicisland.live.NoticeInfo
 import java.util.Locale
 
 /**
@@ -29,6 +31,30 @@ class IslandView(context: Context) : View(context) {
     var battery = BatteryState()
         set(value) { field = value; updateDescription(); invalidate() }
     var onExpandedChanged: ((Boolean) -> Unit)? = null
+
+    /** Current music session, or null. Controls are only drawn and hit-tested while this is set. */
+    var media: MediaInfo? = null
+        set(value) { field = value; invalidate() }
+    /** 0 = previous, 1 = play/pause, 2 = next. */
+    var onMediaAction: ((Int) -> Unit)? = null
+
+    private var noticeActive = false
+    var notice: NoticeInfo? = null
+        set(value) {
+            field = value
+            removeCallbacks(noticeTimeout)
+            if (value == null) { noticeActive = false; invalidate(); return }
+            noticeActive = true
+            if (!isExpanded()) setExpanded(true)
+            postDelayed(noticeTimeout, NOTICE_MS)
+            invalidate()
+        }
+    private val noticeTimeout = Runnable {
+        noticeActive = false
+        if (isExpanded()) setExpanded(false) else invalidate()
+    }
+    private val prevHit = RectF(); private val playHit = RectF(); private val nextHit = RectF()
+    private val shape = Path()
 
     private var progress = 0f
     private var target = 0f
@@ -77,6 +103,7 @@ class IslandView(context: Context) : View(context) {
     fun toggle() = setExpanded(!isExpanded())
 
     fun setExpanded(expanded: Boolean, animate: Boolean = true) {
+        if (!expanded) { noticeActive = false; removeCallbacks(noticeTimeout) }
         target = if (expanded) 1f else 0f
         animator?.cancel()
         if (!animate || settings.animation <= 0.02f) {
@@ -105,10 +132,27 @@ class IslandView(context: Context) : View(context) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> { press = 1f; invalidate() }
-            MotionEvent.ACTION_UP -> { press = 0f; invalidate(); performClick() }
+            MotionEvent.ACTION_UP -> {
+                press = 0f; invalidate()
+                val action = mediaActionAt(event.x, event.y)
+                if (action >= 0) {
+                    if (settings.haptics) performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                    onMediaAction?.invoke(action)
+                } else performClick()
+            }
             MotionEvent.ACTION_CANCEL -> { press = 0f; invalidate() }
         }
         return true
+    }
+
+    private fun mediaActionAt(x: Float, y: Float): Int {
+        if (!isExpanded() || progress < 0.9f || noticeActive || media == null) return -1
+        return when {
+            prevHit.contains(x, y) -> 0
+            playHit.contains(x, y) -> 1
+            nextHit.contains(x, y) -> 2
+            else -> -1
+        }
     }
 
     override fun performClick(): Boolean {
@@ -161,6 +205,7 @@ class IslandView(context: Context) : View(context) {
     }
 
     override fun onDetachedFromWindow() {
+        removeCallbacks(noticeTimeout)
         animator?.cancel(); animator = null
         super.onDetachedFromWindow()
     }
@@ -213,6 +258,83 @@ class IslandView(context: Context) : View(context) {
     }
 
     private fun drawExpanded(c: Canvas, left: Float, cy: Float, w: Float, a: Int, percent: String) {
+        val n = notice
+        val m = media
+        prevHit.setEmpty(); playHit.setEmpty(); nextHit.setEmpty()
+        when {
+            noticeActive && n != null -> drawNoticePage(c, left, cy, w, a, n)
+            m != null -> drawMediaPage(c, left, cy, w, a, m, percent)
+            else -> drawBatteryPage(c, left, cy, w, a, percent)
+        }
+    }
+
+    private fun drawNoticePage(c: Canvas, left: Float, cy: Float, w: Float, a: Int, n: NoticeInfo) {
+        val pad = dp(18f)
+        val max = w - pad * 2
+        val x = left + pad
+        textSecondary.textAlign = Paint.Align.LEFT
+        textSecondary.textSize = sp(11f)
+        textSecondary.color = Color.argb(a, 213, 184, 255)
+        c.drawText(fit(textSecondary, n.app.uppercase(Locale("tr", "TR")), max), x, cy - dp(14f), textSecondary)
+        textPrimary.textAlign = Paint.Align.LEFT
+        textPrimary.textSize = sp(15f)
+        textPrimary.color = Color.argb(a, 247, 242, 255)
+        val title = n.title.ifEmpty { n.text }
+        c.drawText(fit(textPrimary, title, max), x, cy + dp(5f), textPrimary)
+        if (n.title.isNotEmpty() && n.text.isNotEmpty()) {
+            textSecondary.textSize = sp(12f)
+            textSecondary.color = Color.argb(a, 166, 155, 184)
+            c.drawText(fit(textSecondary, n.text, max), x, cy + dp(23f), textSecondary)
+        }
+    }
+
+    private fun drawMediaPage(c: Canvas, left: Float, cy: Float, w: Float, a: Int, m: MediaInfo, percent: String) {
+        val pad = dp(18f)
+        val x = left + pad
+        textSecondary.textSize = sp(11f)
+        textSecondary.textAlign = Paint.Align.RIGHT
+        textSecondary.color = Color.argb(a, 166, 155, 184)
+        c.drawText(percent, left + w - pad, cy - dp(16f), textSecondary)
+        val max = w - pad * 2 - dp(40f)
+        textPrimary.textAlign = Paint.Align.LEFT
+        textPrimary.textSize = sp(14f)
+        textPrimary.color = Color.argb(a, 247, 242, 255)
+        c.drawText(fit(textPrimary, m.title, max), x, cy - dp(16f), textPrimary)
+        textSecondary.textAlign = Paint.Align.LEFT
+        textSecondary.textSize = sp(12f)
+        if (m.artist.isNotEmpty()) c.drawText(fit(textSecondary, m.artist, w - pad * 2), x, cy, textSecondary)
+
+        val by = cy + dp(26f)
+        val gap = dp(56f)
+        val bx = left + w / 2f
+        val touch = dp(24f)
+        prevHit.set(bx - gap - touch, by - touch, bx - gap + touch, by + touch)
+        playHit.set(bx - touch, by - touch, bx + touch, by + touch)
+        nextHit.set(bx + gap - touch, by - touch, bx + gap + touch, by + touch)
+        dot.color = Color.argb(a, 213, 184, 255)
+        val s = dp(7f)
+        // previous: bar + left triangle
+        c.drawRect(bx - gap - s, by - s, bx - gap - s + dp(2f), by + s, dot)
+        shape.reset(); shape.moveTo(bx - gap + s, by - s); shape.lineTo(bx - gap - s + dp(3f), by); shape.lineTo(bx - gap + s, by + s); shape.close()
+        c.drawPath(shape, dot)
+        // next: right triangle + bar
+        shape.reset(); shape.moveTo(bx + gap - s, by - s); shape.lineTo(bx + gap + s - dp(3f), by); shape.lineTo(bx + gap - s, by + s); shape.close()
+        c.drawPath(shape, dot)
+        c.drawRect(bx + gap + s - dp(2f), by - s, bx + gap + s, by + s, dot)
+        // play / pause in a soft violet disc
+        dot.color = Color.argb((a * 0.25f).toInt(), 169, 112, 255)
+        c.drawCircle(bx, by, dp(16f), dot)
+        dot.color = Color.argb(a, 247, 242, 255)
+        if (m.playing) {
+            c.drawRect(bx - dp(5f), by - dp(6f), bx - dp(1.5f), by + dp(6f), dot)
+            c.drawRect(bx + dp(1.5f), by - dp(6f), bx + dp(5f), by + dp(6f), dot)
+        } else {
+            shape.reset(); shape.moveTo(bx - dp(4f), by - dp(7f)); shape.lineTo(bx + dp(6f), by); shape.lineTo(bx - dp(4f), by + dp(7f)); shape.close()
+            c.drawPath(shape, dot)
+        }
+    }
+
+    private fun drawBatteryPage(c: Canvas, left: Float, cy: Float, w: Float, a: Int, percent: String) {
         val pad = dp(16f)
         val ringR = dp(19f)
         val rx = left + pad + ringR; 
@@ -261,4 +383,6 @@ class IslandView(context: Context) : View(context) {
         dot.color = Color.argb(a, 213, 184, 255)
         c.drawPath(boltPath, dot)
     }
+
+    private companion object { const val NOTICE_MS = 5000L }
 }

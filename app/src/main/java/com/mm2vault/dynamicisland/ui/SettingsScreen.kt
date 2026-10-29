@@ -18,7 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -28,6 +30,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +48,33 @@ fun SettingsScreen(
     onChange: (IslandSettings) -> Unit,
     onReset: () -> Unit,
     onBack: () -> Unit,
+    listenerGranted: Boolean,
+    onOpenAccess: () -> Unit,
 ) {
+    // 0 = none, 1 = notifications, 2 = media: which feature is waiting for the consent dialog.
+    var consentFor by remember { mutableStateOf(0) }
+    fun toggleLive(kind: Int, on: Boolean) {
+        fun apply(v: Boolean) = onChange(if (kind == 1) settings.copy(notificationsEnabled = v) else settings.copy(mediaEnabled = v))
+        if (on && !listenerGranted) consentFor = kind else apply(on)
+    }
+    if (consentFor != 0) {
+        AlertDialog(
+            onDismissRequest = { consentFor = 0 },
+            title = { Text(stringResource(R.string.consent_title)) },
+            text = { Text(stringResource(R.string.consent_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val k = consentFor; consentFor = 0
+                    onChange(if (k == 1) settings.copy(notificationsEnabled = true) else settings.copy(mediaEnabled = true))
+                    onOpenAccess()
+                }) { Text(stringResource(R.string.consent_continue), color = Palette.Lavender) }
+            },
+            dismissButton = {
+                TextButton(onClick = { consentFor = 0 }) { Text(stringResource(R.string.consent_cancel), color = Palette.TextDim) }
+            },
+            containerColor = Palette.Surface2, titleContentColor = Palette.Text, textContentColor = Palette.TextDim,
+        )
+    }
     Box(Modifier.fillMaxSize().background(Palette.Screen)) {
         Column(
             Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
@@ -76,6 +108,28 @@ fun SettingsScreen(
                 SwitchRow(R.string.setting_autostart, R.string.setting_autostart_desc, settings.autostart) { onChange(settings.copy(autostart = it)) }
             }
             Text(stringResource(R.string.settings_apply_hint), style = MaterialTheme.typography.bodySmall)
+            Column(
+                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(Palette.Surface)
+                    .border(1.dp, Palette.Hairline, MaterialTheme.shapes.medium).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(stringResource(R.string.live_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.live_desc), style = MaterialTheme.typography.bodySmall)
+                SwitchRow(R.string.live_notifications, R.string.live_notifications_desc, settings.notificationsEnabled) { toggleLive(1, it) }
+                SwitchRow(R.string.live_media, R.string.live_media_desc, settings.mediaEnabled) { toggleLive(2, it) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(if (listenerGranted) R.string.live_access_granted else R.string.live_access_missing),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (listenerGranted) Palette.Success else Palette.Warning,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = onOpenAccess, modifier = Modifier.height(48.dp)) {
+                        Text(stringResource(R.string.live_open_access), color = Palette.Lavender)
+                    }
+                }
+                Text(stringResource(R.string.live_privacy), style = MaterialTheme.typography.bodySmall)
+            }
             OutlinedButton(
                 onClick = onReset, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(26.dp)
             ) { Text(stringResource(R.string.settings_reset), color = Palette.Text) }

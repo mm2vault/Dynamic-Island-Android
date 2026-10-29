@@ -18,6 +18,8 @@ data class IslandSettings(
     val glow: Float = DEFAULT_GLOW,
     val haptics: Boolean = true,
     val autostart: Boolean = false,
+    val notificationsEnabled: Boolean = false,
+    val mediaEnabled: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_WIDTH = 126
@@ -50,6 +52,8 @@ class SettingsRepository(private val context: Context) {
         val glow = floatPreferencesKey("glow")
         val haptics = booleanPreferencesKey("haptics")
         val autostart = booleanPreferencesKey("autostart")
+        val notifications = booleanPreferencesKey("notifications")
+        val media = booleanPreferencesKey("media")
     }
 
     val flow: Flow<IslandSettings> = context.store.data.map { it.toSettings() }
@@ -64,6 +68,8 @@ class SettingsRepository(private val context: Context) {
             p[K.glow] = n.glow
             p[K.haptics] = n.haptics
             p[K.autostart] = n.autostart
+            p[K.notifications] = n.notificationsEnabled
+            p[K.media] = n.mediaEnabled
         }
     }
 
@@ -77,5 +83,7 @@ class SettingsRepository(private val context: Context) {
         glow = this[K.glow] ?: IslandSettings.DEFAULT_GLOW,
         haptics = this[K.haptics] ?: true,
         autostart = this[K.autostart] ?: false,
+        notificationsEnabled = this[K.notifications] ?: false,
+        mediaEnabled = this[K.media] ?: false,
     ).sanitized()
 }
