@@ -19,6 +19,7 @@ import android.view.WindowManager
 import com.mm2vault.dynamicisland.data.BatteryState
 import com.mm2vault.dynamicisland.data.IslandSettings
 import com.mm2vault.dynamicisland.data.SettingsRepository
+import com.mm2vault.dynamicisland.live.LiveContent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -87,7 +88,16 @@ class IslandService : Service() {
     }
 
     private fun start() {
-        val view = IslandView(this).apply { battery = this@IslandService.battery }
+        val view = IslandView(this).apply {
+            battery = this@IslandService.battery
+            onMediaAction = { action ->
+                when (action) {
+                    0 -> LiveContent.previous()
+                    1 -> LiveContent.togglePlayPause()
+                    else -> LiveContent.next()
+                }
+            }
+        }
         island = view
         registerBattery()
         val ok = try {
@@ -106,11 +116,23 @@ class IslandService : Service() {
         }
         _running.value = true
         view.playEntrance()
+        // Live content only reaches the capsule while the matching switch is on.
+        scope.launch {
+            LiveContent.notice.collect { n ->
+                val fresh = n?.takeIf { System.currentTimeMillis() - it.postedAt < 8000L }
+                island?.notice = if (settings.notificationsEnabled) fresh else null
+            }
+        }
+        scope.launch {
+            LiveContent.media.collect { m -> island?.media = if (settings.mediaEnabled) m else null }
+        }
         scope.launch {
             SettingsRepository(applicationContext).flow.collect { s ->
                 settings = s
                 island?.let { v ->
                     v.settings = s
+                    if (!s.notificationsEnabled) v.notice = null
+                    if (!s.mediaEnabled) v.media = null
                     applyPosition()
                 }
             }

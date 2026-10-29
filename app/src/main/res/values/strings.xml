@@ -59,4 +59,22 @@
     <string name="reliability_battery">Pil optimizasyonu</string>
     <string name="reliability_app_info">Uygulama bilgisi</string>
     <string name="temp_format">%1$s °C</string>
+    <string name="live_title">Canlı içerik</string>
+    <string name="live_desc">Varsayılan olarak kapalı. Açarsan Android’in bildirim erişimi izni gerekir.</string>
+    <string name="live_notifications">Bildirim önizleme</string>
+    <string name="live_notifications_desc">Yeni bildirimin uygulama adı, başlığı ve metni kapsülde kısa süre görünür.</string>
+    <string name="live_media">Müzik kontrolü</string>
+    <string name="live_media_desc">Çalan parçanın adı görünür; önceki, oynat/duraklat ve sonraki düğmeleri çalışır.</string>
+    <string name="live_access_granted">Bildirim erişimi verildi</string>
+    <string name="live_access_missing">Bildirim erişimi verilmedi</string>
+    <string name="live_open_access">Erişim ayarını aç</string>
+    <string name="live_privacy">Bildirim içerikleri yalnızca bellekte tutulur; kaydedilmez, paylaşılmaz, internete gönderilmez. Kilit ekranında gizli işaretli bildirimler, sürekli bildirimler ve kendi bildirimlerimiz gösterilmez.</string>
+    <string name="consent_title">Bildirim erişimine izin ver?</string>
+    <string name="consent_body">Bu özellik Android’in “bildirim erişimi” iznini kullanır. Bu izin, cihazdaki bildirimlerin içeriğini okuyabilmeyi kapsar. Uygulama bunları yalnızca kapsülde göstermek için bellekte tutar; kaydetmez ve internete göndermez (uygulamanın internet izni yoktur). İstediğin zaman buradan kapatabilir veya Android ayarlarından izni geri alabilirsin.</string>
+    <string name="consent_continue">Devam et</string>
+    <string name="consent_cancel">Vazgeç</string>
+    <string name="media_prev">Önceki parça</string>
+    <string name="media_play">Oynat</string>
+    <string name="media_pause">Duraklat</string>
+    <string name="media_next">Sonraki parça</string>
 </resources>

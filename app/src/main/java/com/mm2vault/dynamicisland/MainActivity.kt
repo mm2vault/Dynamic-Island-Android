@@ -21,6 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
             IslandTheme {
                 val scope = rememberCoroutineScope()
                 var overlayGranted by remember { mutableStateOf(Settings.canDrawOverlays(this@MainActivity)) }
+                var listenerGranted by remember { mutableStateOf(hasListenerAccess()) }
                 var startError by remember { mutableStateOf(false) }
                 var showSettings by rememberSaveable { mutableStateOf(false) }
                 val running by IslandService.running.collectAsState()
@@ -50,7 +52,10 @@ class MainActivity : ComponentActivity() {
                 val owner = LocalLifecycleOwner.current
                 DisposableEffect(owner) {
                     val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) overlayGranted = Settings.canDrawOverlays(this@MainActivity)
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            overlayGranted = Settings.canDrawOverlays(this@MainActivity)
+                            listenerGranted = hasListenerAccess()
+                        }
                     }
                     owner.lifecycle.addObserver(observer)
                     onDispose { owner.lifecycle.removeObserver(observer) }
@@ -75,6 +80,8 @@ class MainActivity : ComponentActivity() {
                         onChange = { n -> scope.launch { repo.update { n } } },
                         onReset = { scope.launch { repo.reset() } },
                         onBack = { showSettings = false },
+                        listenerGranted = listenerGranted,
+                        onOpenAccess = { openListenerSettings() },
                     )
                 } else {
                     HomeScreen(
@@ -104,6 +111,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun hasListenerAccess(): Boolean =
+        NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)
+
+    private fun openListenerSettings() {
+        try {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+        } catch (_: Exception) { openAppInfo() }
     }
 
     private fun openAppInfo() {
