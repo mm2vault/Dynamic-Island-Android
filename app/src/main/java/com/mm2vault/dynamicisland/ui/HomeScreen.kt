@@ -55,6 +55,8 @@ fun HomeScreen(
     onStop: () -> Unit,
     onOpenPermission: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenBattery: () -> Unit,
+    onOpenAppInfo: () -> Unit,
 ) {
     Box(Modifier.fillMaxSize().background(Palette.Screen)) {
         Column(
@@ -73,6 +75,7 @@ fun HomeScreen(
             PermissionRow(overlayGranted, onOpenPermission)
             if (startError) Text(stringResource(R.string.start_failed), color = Palette.Warning, style = MaterialTheme.typography.bodySmall)
             Controls(running, overlayGranted, onStart, onStop, onOpenPermission)
+            Reliability(onOpenBattery, onOpenAppInfo)
             Text(stringResource(R.string.privacy_note), style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth())
         }
     }
@@ -183,5 +186,25 @@ private fun Controls(running: Boolean, granted: Boolean, onStart: () -> Unit, on
             modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Palette.Neon, contentColor = Color(0xFF1A0B33))
         ) { Text(stringResource(R.string.start_island), style = MaterialTheme.typography.titleMedium, color = Color(0xFF1A0B33)) }
+    }
+}
+
+@Composable
+private fun Reliability(onBattery: () -> Unit, onAppInfo: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(Palette.Surface)
+            .border(1.dp, Palette.Hairline, MaterialTheme.shapes.medium).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(stringResource(R.string.reliability_title), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.reliability_desc), style = MaterialTheme.typography.bodySmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onBattery, modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(24.dp)) {
+                Text(stringResource(R.string.reliability_battery), color = Palette.Text, style = MaterialTheme.typography.labelMedium)
+            }
+            OutlinedButton(onClick = onAppInfo, modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(24.dp)) {
+                Text(stringResource(R.string.reliability_app_info), color = Palette.Text, style = MaterialTheme.typography.labelMedium)
+            }
+        }
     }
 }

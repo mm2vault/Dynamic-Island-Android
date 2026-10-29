@@ -10,11 +10,14 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.animation.PathInterpolator
 import com.mm2vault.dynamicisland.data.BatteryState
 import com.mm2vault.dynamicisland.data.ChargeState
 import com.mm2vault.dynamicisland.data.IslandSettings
+import com.mm2vault.dynamicisland.data.PlugType
+import java.util.Locale
 
 /**
  * Canvas-drawn capsule. No child views, no blur: a few strokes and one gradient,
@@ -60,7 +63,7 @@ class IslandView(context: Context) : View(context) {
     }
 
     private fun capsuleWidth() = dp(settings.widthDp.toFloat()) + (expandedWidth() - dp(settings.widthDp.toFloat())) * progress
-    private fun capsuleHeight() = dp(settings.heightDp.toFloat()) + (dp(76f) - dp(settings.heightDp.toFloat())) * progress
+    private fun capsuleHeight() = dp(settings.heightDp.toFloat()) + (dp(88f) - dp(settings.heightDp.toFloat())) * progress
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(
@@ -110,6 +113,11 @@ class IslandView(context: Context) : View(context) {
 
     override fun performClick(): Boolean {
         super.performClick()
+        if (settings.haptics) {
+            performHapticFeedback(
+                if (android.os.Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
+            )
+        }
         toggle()
         return true
     }
@@ -127,6 +135,30 @@ class IslandView(context: Context) : View(context) {
             ChargeState.UNKNOWN -> R.string.overlay_unknown
         }
     )
+
+    private fun detailLabel(): String {
+        val parts = ArrayList<String>(2)
+        if (battery.plug != PlugType.NONE) {
+            parts += context.getString(
+                when (battery.plug) {
+                    PlugType.AC -> R.string.plug_ac
+                    PlugType.USB -> R.string.plug_usb
+                    PlugType.WIRELESS -> R.string.plug_wireless
+                    else -> R.string.plug_unknown
+                }
+            )
+        }
+        if (battery.hasTemp) {
+            parts += context.getString(R.string.temp_format, String.format(Locale("tr", "TR"), "%.1f", battery.tempTenths / 10f))
+        }
+        return parts.joinToString(" · ")
+    }
+
+    private fun fit(p: Paint, text: String, max: Float): String {
+        var shown = text
+        while (shown.length > 3 && p.measureText(shown) > max) shown = shown.dropLast(2)
+        return if (shown != text) shown.trimEnd() + "…" else shown
+    }
 
     override fun onDetachedFromWindow() {
         animator?.cancel(); animator = null
@@ -195,19 +227,26 @@ class IslandView(context: Context) : View(context) {
         if (battery.charge == ChargeState.CHARGING) drawBolt(c, rx, cy, dp(7f), a)
 
         val tx = rx + ringR + dp(14f)
+        val max = left + w - pad - tx
         textPrimary.textSize = sp(22f)
         textPrimary.color = Color.argb(a, 247, 242, 255)
         textPrimary.textAlign = Paint.Align.LEFT
-        c.drawText(percent, tx, cy - dp(2f), textPrimary)
+        val detail = detailLabel()
+        val lines = if (detail.isEmpty()) 2 else 3
+        val blockH = dp(24f) + dp(16f) + if (lines == 3) dp(15f) else 0f
+        var y = cy - blockH / 2f + dp(22f)
+        c.drawText(percent, tx, y, textPrimary)
         textSecondary.textSize = sp(12f)
-        textSecondary.color = Color.argb(a, if (done) 139 else 166, if (done) 229 else 155, if (done) 176 else 184)
+        textSecondary.color = Color.argb(a, if (done) 139 else 213, if (done) 229 else 184, if (done) 176 else 255)
         textSecondary.textAlign = Paint.Align.LEFT
-        val label = statusLabel()
-        val max = left + w - pad - tx
-        var shown = label
-        while (shown.length > 3 && textSecondary.measureText(shown) > max) shown = shown.dropLast(2)
-        if (shown != label) shown = shown.trimEnd() + "…"
-        c.drawText(shown, tx, cy - dp(2f) + dp(18f), textSecondary)
+        y += dp(17f)
+        c.drawText(fit(textSecondary, statusLabel(), max), tx, y, textSecondary)
+        if (detail.isNotEmpty()) {
+            textSecondary.textSize = sp(11f)
+            textSecondary.color = Color.argb(a, 166, 155, 184)
+            y += dp(15f)
+            c.drawText(fit(textSecondary, detail, max), tx, y, textSecondary)
+        }
     }
 
     private fun drawBolt(c: Canvas, x: Float, y: Float, s: Float, a: Int) {

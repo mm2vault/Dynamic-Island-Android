@@ -2,6 +2,7 @@ package com.mm2vault.dynamicisland.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -15,6 +16,8 @@ data class IslandSettings(
     val offsetDp: Int = DEFAULT_OFFSET,
     val animation: Float = DEFAULT_ANIMATION,
     val glow: Float = DEFAULT_GLOW,
+    val haptics: Boolean = true,
+    val autostart: Boolean = false,
 ) {
     companion object {
         const val DEFAULT_WIDTH = 126
@@ -45,6 +48,8 @@ class SettingsRepository(private val context: Context) {
         val offset = intPreferencesKey("offset")
         val animation = floatPreferencesKey("animation")
         val glow = floatPreferencesKey("glow")
+        val haptics = booleanPreferencesKey("haptics")
+        val autostart = booleanPreferencesKey("autostart")
     }
 
     val flow: Flow<IslandSettings> = context.store.data.map { it.toSettings() }
@@ -57,6 +62,8 @@ class SettingsRepository(private val context: Context) {
             p[K.offset] = n.offsetDp
             p[K.animation] = n.animation
             p[K.glow] = n.glow
+            p[K.haptics] = n.haptics
+            p[K.autostart] = n.autostart
         }
     }
 
@@ -68,5 +75,7 @@ class SettingsRepository(private val context: Context) {
         offsetDp = this[K.offset] ?: IslandSettings.DEFAULT_OFFSET,
         animation = this[K.animation] ?: IslandSettings.DEFAULT_ANIMATION,
         glow = this[K.glow] ?: IslandSettings.DEFAULT_GLOW,
+        haptics = this[K.haptics] ?: true,
+        autostart = this[K.autostart] ?: false,
     ).sanitized()
 }
